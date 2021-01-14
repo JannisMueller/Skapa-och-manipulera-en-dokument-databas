@@ -1,12 +1,18 @@
-Skapa-och-manipulera-en-dokument-databas
+**Skapa-och-manipulera-en-dokument-databas**
 
+Denna repository innehåller min lösning på en extrauppgift på Lab 3 (kurs "Utveckling mot databas och databasadministration", ITHS 202021)
 
-
-Task1 G-uppgiften
+**Task1 G-uppgiften**
 
 Skriv alla satser och resultat från MongoDb som du använder i följande frågor i en txt fil:
 
 \1. Skapa en databas vid namn citydb.
+
+```java
+> use citydb;
+
+switched to db citydb
+```
 
 \2. Sätt in följande dokument i en kollektion med namn: cities
 
@@ -20,15 +26,55 @@ d. _id:4, name: Uppsala, population: 140454
 
 e. _id:5, name: Västerås, population: 110877
 
+```java
+> db.cities.insertMany( [
+{ _id:1, name: "Stockholm", population: 1372565 },
+{ _id:2, name: "Göteborg", population: 549839 },
+{ _id:3, name: "Malmö", population: 280415 },
+{ _id:4, name: "Uppsala", population: 140454 },
+{_id:5, name: "Västerås", population: 110877}
+] );
+
+{ "acknowledged" : true, "insertedIds" : [ 1, 2, 3, 4, 5 ] }
+```
+
 \3. Hitta ett dokument där namnet är “Malmö” och visa bara “namn” och “population”.
+
+```java
+> db.cities.findOne({name: "Malmö"}, {name: 1, population: 1, _id: 0});
+
+{ "name" : "Malmö", "population" : 280415 }
+```
 
 \4. Uppdatera dokumentet som har “namn” “Göteborg” med “population” 549890
 
+```java
+> db.cities.updateOne( 
+{name: "Göteborg"},
+{ $set: 
+{ population: 549890 }
+});
+
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+```
+
 \5. Ta bort dokumentet med _id:4
+
+```java
+> db.cities.remove({_id: 4});
+
+WriteResult({ "nRemoved" : 1 })
+```
 
 \6. Uppdatera dokumentet som har “namn” “Västerås” och öka (med increment) ”population”
 
 fält så att det blir 110879. (increment by 2)
+
+```java
+> db.cities.update({name: "Västerås"}, { $inc: {population: 2}});
+
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+```
 
 \7. Lägg till ett fält “country” och värdet “Sweden” till alla dokument.
 
