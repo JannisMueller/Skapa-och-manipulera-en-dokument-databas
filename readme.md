@@ -27,7 +27,8 @@ d. _id:4, name: Uppsala, population: 140454
 e. _id:5, name: Västerås, population: 110877
 
 ```java
-> db.cities.insertMany( [
+> db.cities.insertMany( 
+[
 { _id:1, name: "Stockholm", population: 1372565 },
 { _id:2, name: "Göteborg", population: 549839 },
 { _id:3, name: "Malmö", population: 280415 },
@@ -50,10 +51,7 @@ e. _id:5, name: Västerås, population: 110877
 
 ```java
 > db.cities.updateOne( 
-{name: "Göteborg"},
-{ $set: 
-{ population: 549890 }
-});
+{name: "Göteborg"},{ $set: { population: 549890 }});
 
 { "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
 ```
@@ -78,11 +76,23 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 
 \7. Lägg till ett fält “country” och värdet “Sweden” till alla dokument.
 
+```java
+> db.cities.updateMany({}, { $set: { country: "Sweden" }});
+
+{ "acknowledged" : true, "matchedCount" : 4, "modifiedCount" : 4 }
+```
+
 \8. Byt namn på fältet “country” till “Country”.
 
+```java
+> db.cities.updateMany({}, { $rename: { "country": "Country" }});
+
+{ "acknowledged" : true, "matchedCount" : 4, "modifiedCount" : 4 }
+```
 
 
-Task 2
+
+**Task 2**
 
 Även här ska ni skriva både satserna och vad mongo svarar (resultat). Ladda ned animals.js
 
@@ -92,33 +102,93 @@ från ITHS Distans.
 
 \2. Gå till databasen animalsdb.
 
+```java
+> use animalsdb
+
+switched to db animalsdb
+```
+
 \3. Skriv i mongo-skalet : load ("animals.js"). Vad gör den raden? Visa resultatet.
+
+```java
+load ("/Users/jannismuller/Documents/Jannis/It-högskolan/Javautvecklare 2020/Kurser/Utveckling mot databas och databasadministration/Labb 3- extra uppgift/animals.js")
+
+true
+```
 
 \4. Hitta alla data från collection animals.
 
+```java
+> db.animals.find().pretty()
+```
+
 \5. Hitta hur många djur det finns totalt i databasen animals?
+
+```java
+> db.animals.count()
+16
+  
+or:  
+
+> db.animals.find().count()
+16
+```
 
 \6. Lägg till en array “favorit_food” med “blueberry, honey och ants” för “Bear” .
 
-\7. Ta bort ants och honey från arrayen “favorit_food” och “rounded ears” från arrayen
+```java
+> db.animals.updateMany( {name: "Bear"}, { $set: { favorit_food: ["blueberry", "honey", "ants"] }});
 
-“data” för “Bear”.
+{ "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+```
+
+\7. Ta bort ants och honey från arrayen “favorit_food” och “rounded ears” från arrayen “data” för “Bear”.
+
+```java
+> db.animals.update( {name: "Bear"}, { $pull: { favorit_food: { $in: ["ants", "honey"] }, data: "rounded ears"}});
+
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+```
 
 \8. Hitta hur många gula djur det finns i kollektionen.
 
-\9. Hitta alla namnet på alla djur vars färg är brun och som lever i Asien och visa deras
+```java
+> db.animals.find({color: "yellow"});
 
-namn, color och found_in .
+{ "_id" : ObjectId("60004c8dd6c276661ca12d4b"), "name" : "Meerkat", "found_in" : [ "Botswana", "Namibia", "Angola", "South Africa" ], "color" : "yellow", "family" : "Herpestidae", "suborder" : "Feliformia", "order" : "Carnivora", "weight" : 1, "data" : [ "can stand on its rear legs", "live in groups" ] }
+
+{ "_id" : ObjectId("60004c8dd6c276661ca12d4c"), "name" : "Lion", "color" : "yellow", "weight" : 200, "class" : "Mammalia", "order" : "Carnivora", "family" : "Felidae", "subfamily" : "Pantherinae", "suborder" : "Feliformia", "data" : [ "live in groups", "carnivore", "smaller than tigers", "protractible claws" ] }
+```
+
+\9. Hitta alla namnet på alla djur vars färg är brun och som lever i Asien och visa deras namn, color och found_in .
+
+
 
 \10. Lägg till fältet “litter_size” med värdet “4-6-kits” för “Fox”.
 
-\11. Lägg till ett fält med namn “likes meat” i arrayen “data” för alla med "order": "Carnivora"
+```java
+> db.animals.update( {name: "Fox"}, { $set: { litter_size: "4-6" } });
 
-och som är gula till färgen.
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+```
+
+\11. Lägg till ett fält med namn “likes meat” i arrayen “data” för alla med "order": "Carnivora".
+
+```java
+> db.animals.updateMany( {order: "Carnivora"}, { $addToSet: { data: "likes meat" } });
+
+{ "acknowledged" : true, "matchedCount" : 10, "modifiedCount" : 10 }
+```
 
 \12. Gruppera efter färger och visa antal djur per färg.
 
+
+
 \13. Skriv ut antalet djur som väger mer än 100.
+
+```java
+> db.animals.find({ weight: { $gt: 100 }}).pretty();
+```
 
 \14. Skriv ut djur med “order” “Carnivora”, sorterat efter weight i fallande ordning.
 
@@ -126,7 +196,7 @@ och som är gula till färgen.
 
 \16. Hitta alla dokument som har “mammal” och "carnivore" i deras “data” fält
 
-Task 3
+**Task 3**
 
 Även här ska ni skriva både satserna och vad mongo svarar (resultat).
 
