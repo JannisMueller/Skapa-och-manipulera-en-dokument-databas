@@ -284,7 +284,7 @@ och hur många är “false”).
 
 ```
 
-VG-uppgiften
+Task 4 VG-uppgiften
 
 Skriv en Java klass (ni bestämmer själva vad den ska hetta).
 
@@ -432,3 +432,16 @@ Skriv en metod som aggregerar en lista med alla restauranger som har 4 eller fle
 
 skriver ut endast “name” och “stars”
 
+```java
+@Override
+public void findRestaurantWithFourOrMoreStars(MongoCollection<Document> collection) {
+    List <Document> queryResults = collection.find(gte("stars",4)).projection(fields(excludeId(),
+                    include("name","stars"))).into(new ArrayList<>());
+
+    System.out.println("Documents with 4 or more stars" );
+    for(Document result : queryResults ) {
+        System.out.println(result.toJson());
+    }
+
+}
+```
