@@ -286,17 +286,149 @@ och hur många är “false”).
 
 VG-uppgiften
 
-Skriv en C# klass (ni bestämmer själva vad den ska hetta).
-
-Ni kan använda lämpliga MongoDB paket ifrån NuGet
+Skriv en Java klass (ni bestämmer själva vad den ska hetta).
 
 Ert program ska:
 
 Ansluta till mongodb (skapa en klient)
 
+```java
+private MongoClient mongoClient = MongoClients.create("mongodb://127.0.0.1:27017");
+
+//connecting to local mongodb and displays all available database
+public RestaurantDaoJBCDImpl() {
+        List<Document> databases = mongoClient.listDatabases().into(new ArrayList<>());
+        databases.forEach(db -> System.out.println(db.toJson()));
+}
+```
+
 Skapa en ny databas via klienten till exempel “lab3”
 
+Skapa en kollektion vid namn “restaurants”
+
+```java
+//connects to specific Database and collection
+@Override
+public MongoCollection<Document> connectionToCollection(String nameDb, String collection) {
+    MongoDatabase mongoDatabaseDB = mongoClient.getDatabase(nameDb);
+    MongoCollection<Document> mongoCollection = mongoDatabaseDB.getCollection(collection);
+
+    return mongoCollection;
+    }
 ```
-Se filer 
+
+```java
+Main:
+//creates a new connection
+RestaurantDao restaurantDao = new RestaurantDaoJBCDImpl();
+
+MongoCollection <Document> restaurantCollection = restaurantDao.connectionToCollection(
+        "restaurantdb", "restaurant");
 ```
+
+Skriv en metod som skriver ut (Console.Writeline) alla dokument i samlingen.
+
+```java
+@Override
+public void printWholeCollection(MongoCollection<Document> collection) {
+    MongoCursor<Document> cursor = collection.find().iterator();
+    try (cursor){
+        System.out.println("List of all documents in collection " + collection);
+        while(cursor.hasNext()){
+            System.out.println(cursor.next().toJson());
+        }
+    }
+}
+```
+
+```java
+Main:
+//print out of all documents in the collection "restaurants"
+restaurantDao.printWholeCollection(restaurantCollection);
+
+------------
+Output Consol:
+
+List of all documents in collection com.mongodb.client.internal.MongoCollectionImpl@1018bde2
+{"_id": {"$oid": "60053a0abbf9fe4299852976"}, "name": "Sun Bakery Trattoria", "stars": 4, "categories": ["Pizza", "Pasta", "Italian", "Coffee", "Sandwiches"]}
+{"_id": {"$oid": "60053a0abbf9fe4299852977"}, "name": "Blue Bagels Grill", "stars": 3, "categories": ["Bagels", "Cookies", "Sandwiches"]}
+{"_id": {"$oid": "60053a0abbf9fe4299852978"}, "name": "Hot Bakery Cafe", "stars": 4, "categories": ["Bakery", "Cafe", "Coffee", "Dessert"]}
+```
+
+Skriv en metod som skriver ut namnet på alla dokument som har kategorin “Cafe”
+
+OBS! Exkludera id så att bara namn visas
+
+```java
+@Override
+    public void findDocumentsWithFilter(MongoCollection <Document> collection, String fieldName, String filter, String fieldToIncludeInQueryOutput) {
+        List <Document> queryResults = collection.find(eq(fieldName,filter))
+                .projection(fields(excludeId(), 
+                        include(fieldToIncludeInQueryOutput))).
+                        into(new ArrayList<>());
+
+        System.out.println("Documents with " + fieldName + ": " +  filter);
+        for(Document result : queryResults ) {
+            System.out.println(result.toJson());
+        }
+
+    }
+```
+
+--------------
+```java
+Main:
+//list of Documents with categories: Sandwiches
+restaurantDao.findDocumentsWithFilter(restaurantCollection,"categories",
+                                      "Sandwiches","name");
+---------------
+Output Consol:
+Documents with categories: Sandwiches
+{"name": "Sun Bakery Trattoria"}
+{"name": "Blue Bagels Grill"}
+
+
+```
+
+Skriv en metod som uppdaterar genom increment “stars” för den restaurang som har “name”
+
+“XYZ Coffee Bar” så att nya värdet på stars blir 6.
+
+OBS! Ni ska använda increment .
+
+OBS! Skriv ut alla restauranger igen, så att jag kan se att “stars” blivit 6, för denna restaurang
+
+när jag kör ert program.
+
+```java
+ @Override
+    public void findOneAndUpdateWithIncrement(MongoCollection<Document> collection,
+                                              String field, String nameOfRestaurant,																							      String fieldToIncrement, int inc) {
+
+        Bson filter = eq(field, nameOfRestaurant);
+        Bson incUpdate = inc(fieldToIncrement,inc);
+        collection.findOneAndUpdate(filter,incUpdate);
+    }
+}
+```
+
+Skriv en metod som uppdaterar “name” för "456 Cookies Shop" till “123 Cookies Heaven”
+
+OBS! Skriv ut alla restauranger igen, så att jag kan se att namnet ändrats för denna restaurang
+
+när jag kör ert program.
+
+```java
+@Override
+public void findOneAndUpdateOneChangeNameOfRestaurant(MongoCollection<Document> collection, String field, String nameOfRestaurant, String newName) {
+    Bson filter = eq(field, nameOfRestaurant);
+    Bson updateOperation = set(field,newName);
+
+    collection.updateOne(filter,updateOperation);
+}
+```
+
+Skriv en metod som aggregerar en lista med alla restauranger som har 4 eller fler “stars” och
+
+skriver ut endast “name” och “stars”
 
